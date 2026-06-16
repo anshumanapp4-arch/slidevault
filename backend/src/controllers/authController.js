@@ -195,10 +195,11 @@ const oauthCallback = (req, res) => {
   }
 
   // Generate token and set cookie
-  generateTokenAndSetCookie(req.user, res);
+  const token = generateTokenAndSetCookie(req.user, res);
 
-  // Redirect to frontend home page
-  res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+  // Redirect to frontend with token in URL (for cross-domain cookie fallback)
+  const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000';
+  res.redirect(`${frontendURL}/?oauth_token=${token}`);
 };
 
 module.exports = {

@@ -4,6 +4,7 @@ import axios from 'axios';
  * Configured Axios instance for API calls.
  * - Base URL from environment variable
  * - Credentials included for cookie-based auth
+ * - Authorization header with stored token for cross-domain fallback
  * - Global error response interceptor
  */
 const api = axios.create({
@@ -12,6 +13,35 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Token helpers for cross-domain auth (localStorage fallback when cookies are blocked)
+export const setToken = (token) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('slidevault_token', token);
+  }
+};
+
+export const getToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('slidevault_token');
+  }
+  return null;
+};
+
+export const clearToken = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('slidevault_token');
+  }
+};
+
+// Request interceptor: attach token from localStorage as Authorization header
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // Response interceptor for global error handling
